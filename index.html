@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>왓챠 구독권 PDF 생성</title>
+<script src="pdf-lib.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
+    background: #202020; color: #eee;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 40px 20px;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 8px; color: #fff; }
+  .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 32px; }
+  .btn-grid { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; }
+  .btn-coupon {
+    width: 220px; height: 80px;
+    border: 2px solid rgba(255,255,255,0.15); border-radius: 12px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    color: #fff; font-size: 1rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  }
+  .btn-coupon:hover { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.12); transform: translateY(-2px); }
+  .btn-coupon:active { transform: translateY(0); }
+  .btn-coupon .label { font-size: 0.75rem; color: #aaa; font-weight: 400; }
+  .btn-coupon.premium { border-color: #FF0558; }
+  .btn-coupon.premium:hover { border-color: #ff3a7a; box-shadow: 0 4px 20px rgba(255,5,88,0.3); }
+  .btn-coupon.basic { border-color: #FF699C; }
+  .btn-coupon.basic:hover { border-color: #ff8ab3; box-shadow: 0 4px 20px rgba(255,105,156,0.3); }
+
+  /* Color picker */
+  .color-section { margin-bottom: 24px; text-align: center; }
+  .color-section .section-label { font-size: 0.85rem; color: #aaa; margin-bottom: 10px; }
+  .color-chips { display: flex; gap: 10px; justify-content: center; align-items: flex-start; }
+  .color-chip {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 3px solid transparent; cursor: pointer;
+    transition: all 0.2s; position: relative;
+  }
+  .color-chip:hover { transform: scale(1.15); }
+  .color-chip.selected { border-color: #fff; box-shadow: 0 0 12px rgba(255,255,255,0.4); }
+  .color-chip .cmyk-tip {
+    display: none; position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%);
+    font-size: 0.6rem; color: #888; white-space: nowrap;
+  }
+  .color-chip:hover .cmyk-tip { display: block; }
+
+  .guide-text {
+    color: #777; font-size: 0.78rem; text-align: center;
+    max-width: 460px; line-height: 1.6; margin-bottom: 12px;
+  }
+
+  #preview-area {
+    display: none; width: 100%; max-width: 700px;
+    background: rgba(255,255,255,0.05); border-radius: 12px;
+    padding: 24px; margin-top: 16px;
+  }
+  #preview-area h2 { font-size: 1.1rem; margin-bottom: 12px; text-align: center; }
+  .preview-pages { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+  .preview-page { width: 100%; max-width: 500px; }
+  .preview-page img { width: 100%; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); }
+  .preview-page .page-label { font-size: 0.75rem; color: #888; text-align: center; margin-top: 4px; }
+  .preview-info { text-align: center; color: #aaa; font-size: 0.85rem; margin: 12px 0; }
+
+  .btn-download {
+    display: none; margin: 16px auto 0;
+    padding: 12px 32px; border-radius: 8px; border: none;
+    background: #FF0558; color: #fff; font-size: 1rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-download:hover { background: #ff3a7a; }
+  .btn-download.basic-style { background: #FF699C; }
+  .btn-download.basic-style:hover { background: #ff8ab3; }
+
+  #loading {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 100;
+    justify-content: center; align-items: center;
+    flex-direction: column; gap: 12px;
+  }
+  #loading.show { display: flex; }
+  .spinner {
+    width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2);
+    border-top-color: #FF0558; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading-text { color: #ccc; font-size: 0.9rem; }
+
+  #toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: #333; color: #fff; padding: 10px 24px; border-radius: 8px;
+    font-size: 0.85rem; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<h1>왓챠 지류 구독권 인쇄용 PDF 생성</h1>
+
+<div class="btn-grid">
+  <button class="btn-coupon premium" onclick="generate('premium_regular')">
+    프리미엄 1개월
+    <span class="label">정기권</span>
+  </button>
+  <button class="btn-coupon premium" onclick="generate('premium_short')">
+    프리미엄 1개월
+    <span class="label">단기권</span>
+  </button>
+  <button class="btn-coupon basic" onclick="generate('basic_short')">
+    베이직 1개월
+    <span class="label">단기권</span>
+  </button>
+</div>
+
+<div class="color-section">
+  <div class="section-label">뒷면 컬러 선택</div>
+  <div class="color-chips" id="color-chips"></div>
+</div>
+
+<p class="guide-text">뒷면에 인쇄되는 등록 기간은 6월 30일 또는 12월 31일로 자동 설정됩니다.</p>
+
+<div id="preview-area">
+  <h2 id="preview-title"></h2>
+  <div class="preview-info" id="preview-info"></div>
+  <div class="preview-pages">
+    <div class="preview-page"><img id="preview-front" alt="앞면"><div class="page-label">1페이지 (앞면)</div></div>
+    <div class="preview-page"><img id="preview-back" alt="뒷면"><div class="page-label">2페이지 (뒷면)</div></div>
+  </div>
+  <button class="btn-download" id="btn-download">PDF 다운로드</button>
+</div>
+
+<div id="loading"><div class="spinner"></div><div id="loading-text">로딩 중...</div></div>
+<div id="toast"></div>
+
+<script>
+// --- Color palette (CMYK -> RGB approximation) ---
+const COLORS = [
+  { cmyk: 'C0 M46 Y0 K0',   hex: '#eda0c7' },
+  { cmyk: 'C22 M38 Y0 K0',  hex: '#bfa5cd' },
+  { cmyk: 'C36 M32 Y0 K0',  hex: '#a9add2' },
+  { cmyk: 'C32 M14 Y0 K0',  hex: '#b6ccea' },
+  { cmyk: 'C0 M95 Y47 K0',  hex: '#e61f56' },
+];
+let selectedColor = COLORS[0].hex;
+
+
+// Build color chips
+const chipsEl = document.getElementById('color-chips');
+COLORS.forEach((c, i) => {
+  const chip = document.createElement('div');
+  chip.className = 'color-chip' + (i === 0 ? ' selected' : '');
+  chip.style.background = c.hex;
+  chip.innerHTML = `<span class="cmyk-tip">${c.cmyk}</span>`;
+  chip.onclick = () => {
+    document.querySelectorAll('.color-chip').forEach(el => el.classList.remove('selected'));
+    chip.classList.add('selected');
+    selectedColor = c.hex;
+    updateBackPreview();
+  };
+  chipsEl.appendChild(chip);
+});
+
+
+// --- Coupon types ---
+const TYPES = {
+  premium_regular: {
+    name: '프리미엄 정기권',
+    frontSvg: 'svg/앞면_프리미엄_공통.svg',
+    backSvg: 'svg/뒷면_프리미엄_정기권.svg',
+    backAccent: '#b6ccea',
+    prefix: '프리미엄_정기권',
+    style: 'premium'
+  },
+  premium_short: {
+    name: '프리미엄 단기권',
+    frontSvg: 'svg/앞면_프리미엄_공통.svg',
+    backSvg: 'svg/뒷면_프리미엄_단기권.svg',
+    backAccent: '#e61f56',
+    prefix: '프리미엄_단기권',
+    style: 'premium'
+  },
+  basic_short: {
+    name: '베이직 단기권',
+    frontSvg: 'svg/앞면_베이직_공통.svg',
+    backSvg: 'svg/뒷면_베이직_단기권_한맥용.svg',
+    backAccent: '#aeabd4',
+    prefix: '베이직_단기권',
+    style: 'basic'
+  }
+};
+
+// --- Caches ---
+const pdfCache = {};
+const svgCache = {};
+
+// --- Print dimensions (pt) ---
+const TRIM_W  = 354.331;
+const TRIM_H  = 198.425;
+const BLEED   = 8.504;
+const MARK_M  = 33.0;
+const PAGE_W  = TRIM_W + MARK_M * 2;
+const PAGE_H  = TRIM_H + MARK_M * 2;
+const MARK_LEN = 14;
+const MARK_GAP = 5;
+const SRC_W = 371.339;
+const SRC_H = 215.433;
+
+// Render size for back SVG (600 DPI at bleed size, for QR code sharpness)
+const DPI = 600;
+const BLEED_W_MM = SRC_W / 2.8346;
+const BLEED_H_MM = SRC_H / 2.8346;
+const PX_W = Math.round(BLEED_W_MM / 25.4 * DPI);
+const PX_H = Math.round(BLEED_H_MM / 25.4 * DPI);
+
+// --- Date logic ---
+function calcExpiry(issueDate) {
+  const d = new Date(issueDate);
+  d.setMonth(d.getMonth() + 6);
+  const m = d.getMonth() + 1;
+  const y = d.getFullYear();
+  return m <= 6 ? `${y}.06.30` : `${y}.12.31`;
+}
+function getIssueDate() {
+  return new Date();
+}
+function formatDateForFile(expiryStr) {
+  return expiryStr.replace(/\./g, '').slice(2);
+}
+
+// --- SVG modifications ---
+function replaceDateInSvg(svgText, newDate) {
+  return svgText.replace(
+    /(>등록 기간 : )\d<\/tspan>(?:<tspan[^>]*>[\d.]<\/tspan>)*<tspan[^>]*>[\d.]*까지<\/tspan>/,
+    `$1${newDate}까지</tspan>`
+  );
+}
+
+function replaceColorInSvg(svgText, origHex, newHex) {
+  return svgText.replace(
+    new RegExp(`fill: ${origHex.replace('#', '\\#')}`, 'g'),
+    `fill: ${newHex}`
+  );
+}
+
+// Crop SVG viewBox to trim size (remove 3mm bleed from preview)
+function cropToTrim(svgText) {
+  // Original viewBox: 0 0 371.34 215.43 (bleed)
+  // Trim viewBox: 8.504 8.504 354.33 198.43
+  return svgText.replace(
+    /viewBox="0 0 371\.34 215\.43"/,
+    'viewBox="8.504 8.504 354.33 198.43"'
+  );
+}
+
+// Inject crispEdges rendering for QR code sharpness
+function injectCrispEdges(svgText) {
+  return svgText.replace(
+    /(<svg[^>]*)(>)/,
+    '$1 shape-rendering="crispEdges"$2'
+  );
+}
+
+// --- Font embedding ---
+let fontBase64 = null;
+async function loadFont() {
+  if (fontBase64) return fontBase64;
+  const resp = await fetch('font_b64.txt');
+  if (!resp.ok) throw new Error('폰트 파일 로드 실패');
+  fontBase64 = (await resp.text()).trim();
+  return fontBase64;
+}
+function embedFontInSvg(svgText, b64) {
+  const fontFace = `<defs><style>@font-face{font-family:'WATCHASansOTFExtraBold-KSCpc-EUC-H';src:url(data:font/otf;base64,${b64}) format('opentype');}@font-face{font-family:'WATCHA Sans OTF';src:url(data:font/otf;base64,${b64}) format('opentype');}</style></defs>`;
+  return svgText.replace(/(<svg[^>]*>)/, `$1${fontFace}`);
+}
+
+// --- Loading ---
+async function loadSvg(path) {
+  if (svgCache[path]) return svgCache[path];
+  const resp = await fetch(path);
+  if (!resp.ok) throw new Error(`SVG 로드 실패: ${path}`);
+  const text = await resp.text();
+  svgCache[path] = text;
+  return text;
+}
+async function loadPdf(path) {
+  if (pdfCache[path]) return pdfCache[path];
+  const resp = await fetch(path);
+  if (!resp.ok) throw new Error(`PDF 로드 실패: ${path}`);
+  const buf = await resp.arrayBuffer();
+  pdfCache[path] = buf;
+  return buf;
+}
+
+// --- SVG to Canvas ---
+function svgToCanvas(svgText, width, height) {
+  return new Promise((resolve, reject) => {
+    const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      resolve(canvas);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('SVG 렌더링 실패')); };
+    img.src = url;
+  });
+}
+
+// --- UI ---
+function showLoading(msg) {
+  document.getElementById('loading-text').textContent = msg;
+  document.getElementById('loading').classList.add('show');
+}
+function hideLoading() { document.getElementById('loading').classList.remove('show'); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+// --- Crop marks ---
+function drawCropMarks(page) {
+  const { rgb } = PDFLib;
+  const color = rgb(0, 0, 0);
+  const thickness = 0.5;
+  const tx1 = MARK_M, ty1 = MARK_M;
+  const tx2 = MARK_M + TRIM_W, ty2 = MARK_M + TRIM_H;
+  const gap = MARK_GAP + BLEED;
+  const lines = [
+    [tx1, ty1 - gap, tx1, ty1 - gap - MARK_LEN],
+    [tx1 - gap, ty1, tx1 - gap - MARK_LEN, ty1],
+    [tx2, ty1 - gap, tx2, ty1 - gap - MARK_LEN],
+    [tx2 + gap, ty1, tx2 + gap + MARK_LEN, ty1],
+    [tx1, ty2 + gap, tx1, ty2 + gap + MARK_LEN],
+    [tx1 - gap, ty2, tx1 - gap - MARK_LEN, ty2],
+    [tx2, ty2 + gap, tx2, ty2 + gap + MARK_LEN],
+    [tx2 + gap, ty2, tx2 + gap + MARK_LEN, ty2],
+  ];
+  for (const [x1, y1, x2, y2] of lines) {
+    page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness, color });
+  }
+}
+
+// --- Build back SVG with color + date + font ---
+let cachedFontB64 = null;
+
+async function ensureFont() {
+  if (!cachedFontB64) cachedFontB64 = await loadFont();
+  return cachedFontB64;
+}
+
+function buildBackSvg(template, fontB64, origAccent, color, date) {
+  let svg = replaceDateInSvg(template, date);
+  svg = replaceColorInSvg(svg, origAccent, color);
+  svg = injectCrispEdges(svg);
+  svg = embedFontInSvg(svg, fontB64);
+  return svg;
+}
+
+// Live preview update when color changes
+async function updateBackPreview() {
+  if (!currentType || !currentExpiry) return;
+  try {
+    const [backTemplate, fontB64] = await Promise.all([loadSvg(currentType.backSvg), ensureFont()]);
+    const svg = buildBackSvg(backTemplate, fontB64, currentType.backAccent, selectedColor, currentExpiry);
+    const blob = new Blob([cropToTrim(svg)], { type: 'image/svg+xml;charset=utf-8' });
+    document.getElementById('preview-back').src = URL.createObjectURL(blob);
+  } catch (e) { console.error(e); }
+}
+
+// --- Main flow ---
+let pendingData = null;
+let currentExpiry = null;
+let currentType = null;
+
+async function generate(typeKey) {
+  const type = TYPES[typeKey];
+  const issueDate = getIssueDate();
+  const expiry = calcExpiry(issueDate);
+  currentExpiry = expiry;
+  const fileDate = formatDateForFile(expiry);
+  const fileName = `${type.prefix}_${fileDate}.pdf`;
+
+  try {
+    currentType = type;
+    showLoading('리소스 로딩 중...');
+
+    const [fontB64, frontSvg, backTemplate] = await Promise.all([
+      ensureFont(),
+      loadSvg(type.frontSvg),
+      loadSvg(type.backSvg)
+    ]);
+
+    showLoading('미리보기 생성 중...');
+
+    const backSvg = buildBackSvg(backTemplate, fontB64, type.backAccent, selectedColor, expiry);
+
+    // Preview (cropped to trim size)
+    const frontBlob = new Blob([cropToTrim(frontSvg)], { type: 'image/svg+xml;charset=utf-8' });
+    const backBlob = new Blob([cropToTrim(backSvg)], { type: 'image/svg+xml;charset=utf-8' });
+    document.getElementById('preview-front').src = URL.createObjectURL(frontBlob);
+    document.getElementById('preview-back').src = URL.createObjectURL(backBlob);
+    document.getElementById('preview-title').textContent = type.name;
+    document.getElementById('preview-info').textContent = `등록 기간: ${expiry}까지 | 파일명: ${fileName}`;
+
+    const btnDl = document.getElementById('btn-download');
+    btnDl.style.display = 'block';
+    btnDl.className = 'btn-download' + (type.style === 'basic' ? ' basic-style' : '');
+    document.getElementById('preview-area').style.display = 'block';
+
+    hideLoading();
+
+    pendingData = { frontSvg, backTemplate, fontB64, type, expiry, fileDate };
+    btnDl.onclick = () => downloadPdf();
+
+  } catch (err) {
+    hideLoading();
+    alert('오류: ' + err.message);
+    console.error(err);
+  }
+}
+
+async function downloadPdf() {
+  if (!pendingData) return;
+  const { frontSvg, backTemplate, fontB64, type, expiry, fileDate } = pendingData;
+  const fileName = `${type.prefix}_${fileDate}.pdf`;
+
+  try {
+    showLoading('PDF 생성 중...');
+
+    // Build back SVG with current color selection
+    const backSvg = buildBackSvg(backTemplate, fontB64, type.backAccent, selectedColor, expiry);
+
+    // Render both SVGs to canvas at 600 DPI
+    const [frontCanvas, backCanvas] = await Promise.all([
+      svgToCanvas(frontSvg, PX_W, PX_H),
+      svgToCanvas(backSvg, PX_W, PX_H)
+    ]);
+
+    showLoading('PDF 저장 중...');
+
+    const { PDFDocument, PDFName } = PDFLib;
+    const outDoc = await PDFDocument.create();
+    outDoc.setProducer('왓챠 구독권 PDF 생성기');
+    outDoc.setCreator('왓챠 구독권 PDF 생성기');
+
+    // Helper: canvas -> embedded PNG image in PDF
+    async function canvasToPage(canvas) {
+      const pngUrl = canvas.toDataURL('image/png');
+      const pngBytes = Uint8Array.from(atob(pngUrl.split(',')[1]), c => c.charCodeAt(0));
+      const img = await outDoc.embedPng(pngBytes);
+      const page = outDoc.addPage([PAGE_W, PAGE_H]);
+      page.drawImage(img, { x: MARK_M - BLEED, y: MARK_M - BLEED, width: SRC_W, height: SRC_H });
+      return page;
+    }
+
+    const page1 = await canvasToPage(frontCanvas);
+    const page2 = await canvasToPage(backCanvas);
+
+    // Set boxes + crop marks for both pages
+    const mkBox = (x1, y1, x2, y2) => outDoc.context.obj([x1, y1, x2, y2]);
+    for (const page of [page1, page2]) {
+      page.node.set(PDFName.of('TrimBox'), mkBox(MARK_M, MARK_M, MARK_M + TRIM_W, MARK_M + TRIM_H));
+      page.node.set(PDFName.of('BleedBox'), mkBox(MARK_M - BLEED, MARK_M - BLEED, MARK_M + TRIM_W + BLEED, MARK_M + TRIM_H + BLEED));
+      page.node.set(PDFName.of('ArtBox'), mkBox(MARK_M, MARK_M, MARK_M + TRIM_W, MARK_M + TRIM_H));
+      drawCropMarks(page);
+    }
+
+    const pdfBytes = await outDoc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fileName; a.click();
+    URL.revokeObjectURL(url);
+
+    hideLoading();
+    showToast(`${fileName} 다운로드 완료`);
+
+  } catch (err) {
+    hideLoading();
+    alert('PDF 생성 실패: ' + err.message);
+    console.error(err);
+  }
+}
+
+// Init
+</script>
+</body>
+</html>
