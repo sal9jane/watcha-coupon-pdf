@@ -11,73 +11,67 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
     background: #202020; color: #eee;
     min-height: 100vh; display: flex; flex-direction: column; align-items: center;
-    padding: 40px 20px;
+    padding: 48px 20px;
   }
-  h1 { font-size: 1.6rem; margin-bottom: 8px; color: #fff; }
-  .subtitle { color: #666; font-size: 0.78rem; margin-bottom: 32px; letter-spacing: 0.05em; }
-  .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 32px; }
-  .btn-grid { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 40px; }
+  .header h1 { font-size: 1.5rem; color: #fff; font-weight: 700; margin-bottom: 10px; }
+  .header .spec { color: #999; font-size: 0.72rem; letter-spacing: 0.04em; }
+
+  /* Coupon buttons */
+  .btn-grid { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px; }
   .btn-coupon {
-    width: 220px; height: 90px;
-    border: 2px solid rgba(255,255,255,0.15); border-radius: 12px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-    color: #fff; font-size: 1rem; font-weight: 600;
-    cursor: pointer; transition: all 0.2s;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    width: 200px; padding: 18px 0;
+    border: 1.5px solid rgba(255,255,255,0.12); border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    color: #fff; cursor: pointer; transition: all 0.2s;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
   }
-  .btn-coupon:hover { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.12); transform: translateY(-2px); }
+  .btn-coupon:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
   .btn-coupon:active { transform: translateY(0); }
-  .btn-coupon .label { font-size: 0.75rem; color: #aaa; font-weight: 400; }
-  .btn-coupon .expiry-label { font-size: 0.65rem; color: #666; font-weight: 400; }
-  .btn-coupon.premium { border-color: #FF0558; }
-  .btn-coupon.premium:hover { border-color: #ff3a7a; box-shadow: 0 4px 20px rgba(255,5,88,0.3); }
-  .btn-coupon.basic { border-color: #FF699C; }
-  .btn-coupon.basic:hover { border-color: #ff8ab3; box-shadow: 0 4px 20px rgba(255,105,156,0.3); }
+  .btn-coupon .title { font-size: 1.05rem; font-weight: 600; }
+  .btn-coupon .sub { font-size: 0.72rem; color: #bbb; font-weight: 400; }
+  .btn-coupon.premium { border-color: rgba(255,5,88,0.5); }
+  .btn-coupon.premium:hover { border-color: #FF0558; box-shadow: 0 4px 24px rgba(255,5,88,0.2); }
+  .btn-coupon.basic { border-color: rgba(255,105,156,0.5); }
+  .btn-coupon.basic:hover { border-color: #FF699C; box-shadow: 0 4px 24px rgba(255,105,156,0.2); }
 
-  /* Color picker */
-  .color-section { margin-bottom: 24px; text-align: center; }
-  .color-section .section-label { font-size: 0.85rem; color: #aaa; margin-bottom: 10px; }
-  .color-chips { display: flex; gap: 10px; justify-content: center; align-items: flex-start; }
+  .guide-info { color: #999; font-size: 0.7rem; text-align: center; margin-bottom: 36px; }
+
+  /* Color section */
+  .color-section { text-align: center; margin-bottom: 32px; }
+  .color-chips { display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; }
   .color-chip {
-    width: 40px; height: 40px; border-radius: 50%;
-    border: 3px solid transparent; cursor: pointer;
-    transition: all 0.2s; position: relative;
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 2.5px solid transparent; cursor: pointer;
+    transition: all 0.15s;
   }
-  .color-chip:hover { transform: scale(1.15); }
-  .color-chip.selected { border-color: #fff; box-shadow: 0 0 12px rgba(255,255,255,0.4); }
-  .color-chip .cmyk-tip {
-    display: none; position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%);
-    font-size: 0.6rem; color: #888; white-space: nowrap;
-  }
-  .color-chip:hover .cmyk-tip { display: block; }
+  .color-chip:hover { transform: scale(1.2); }
+  .color-chip.selected { border-color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+  .color-hint { font-size: 0.68rem; color: #999; }
 
-  .guide-info {
-    color: #555; font-size: 0.7rem; text-align: center;
-    margin: -12px 0 24px;
-  }
-
+  /* Preview */
   #preview-area {
-    display: none; width: 100%; max-width: 700px;
-    background: rgba(255,255,255,0.05); border-radius: 12px;
-    padding: 24px; margin-top: 16px;
+    display: none; width: 100%; max-width: 1100px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px; padding: 24px; margin-top: 8px;
   }
-  #preview-area h2 { font-size: 1.1rem; margin-bottom: 12px; text-align: center; }
-  .preview-pages { display: flex; flex-direction: column; gap: 16px; align-items: center; }
-  .preview-page { width: 100%; max-width: 500px; }
-  .preview-page img { width: 100%; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); }
-  .preview-page .page-label { font-size: 0.75rem; color: #888; text-align: center; margin-top: 4px; }
-  .preview-info { text-align: center; color: #aaa; font-size: 0.85rem; margin: 12px 0; }
+  .preview-pages { display: flex; gap: 16px; align-items: flex-start; }
+  .preview-page { flex: 1; min-width: 0; }
+  .preview-page img { width: 100%; border-radius: 4px; }
 
   .btn-download {
     display: none; margin: 16px auto 0;
-    padding: 12px 32px; border-radius: 8px; border: none;
-    background: #FF0558; color: #fff; font-size: 1rem; font-weight: 600;
+    padding: 12px 40px; border-radius: 8px; border: none;
+    background: #FF0558; color: #fff; font-size: 0.88rem; font-weight: 600;
     cursor: pointer; transition: all 0.2s;
   }
   .btn-download:hover { background: #ff3a7a; }
   .btn-download.basic-style { background: #FF699C; }
   .btn-download.basic-style:hover { background: #ff8ab3; }
 
+  /* Loading & toast */
   #loading {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.7); z-index: 100;
@@ -86,56 +80,53 @@
   }
   #loading.show { display: flex; }
   .spinner {
-    width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2);
+    width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.15);
     border-top-color: #FF0558; border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  #loading-text { color: #ccc; font-size: 0.9rem; }
+  #loading-text { color: #999; font-size: 0.85rem; }
 
   #toast {
     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
     background: #333; color: #fff; padding: 10px 24px; border-radius: 8px;
-    font-size: 0.85rem; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    font-size: 0.82rem; opacity: 0; transition: opacity 0.3s; pointer-events: none;
   }
   #toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
-<h1>지류 구독권 인쇄용 PDF 생성</h1>
-<p class="subtitle">125 × 70mm · Bleed 3mm + Trim Marks · CMYK · 300dpi</p>
+<div class="header">
+  <h1>지류 구독권 인쇄용 PDF 생성</h1>
+  <div class="spec">125 × 70mm · Bleed 3mm + Trim Marks · CMYK · 300dpi</div>
+</div>
 
 <div class="btn-grid">
-  <button class="btn-coupon premium" onclick="generate('premium_regular')">
-    프리미엄 1개월
-    <span class="label">정기권</span>
-    <span class="expiry-label" id="expiry-premium-regular"></span>
-  </button>
   <button class="btn-coupon premium" onclick="generate('premium_short')">
-    프리미엄 1개월
-    <span class="label">단기권</span>
-    <span class="expiry-label" id="expiry-premium-short"></span>
+    <span class="title">프리미엄 1개월</span>
+    <span class="sub">단기권 <span id="expiry-premium-short"></span></span>
+  </button>
+  <button class="btn-coupon premium" onclick="generate('premium_regular')">
+    <span class="title">프리미엄 1개월</span>
+    <span class="sub">정기권 <span id="expiry-premium-regular"></span></span>
   </button>
   <button class="btn-coupon basic" onclick="generate('basic_short')">
-    베이직 1개월
-    <span class="label">단기권</span>
-    <span class="expiry-label" id="expiry-basic-short"></span>
+    <span class="title">베이직 1개월</span>
+    <span class="sub">단기권 <span id="expiry-basic-short"></span></span>
   </button>
 </div>
-<p class="guide-info">등록 기간은 생성일 기준으로 6월 30일 또는 12월 31일로 자동 설정됩니다.</p>
+<p class="guide-info">등록 기간은 생성일 기준 자동 계산됩니다. (6월 30일 또는 12월 31일)</p>
 
 <div class="color-section">
-  <div class="section-label">뒷면 컬러를 선택할 수 있어요.</div>
   <div class="color-chips" id="color-chips"></div>
+  <div class="color-hint">이전 회차와 헷갈리지 않게 뒷면을 다른 컬러로 발행하세요.</div>
 </div>
 
 <div id="preview-area">
-  <h2 id="preview-title"></h2>
-  <div class="preview-info" id="preview-info"></div>
   <div class="preview-pages">
-    <div class="preview-page"><img id="preview-front" alt="앞면"><div class="page-label">1페이지 (앞면)</div></div>
-    <div class="preview-page"><img id="preview-back" alt="뒷면"><div class="page-label">2페이지 (뒷면)</div></div>
+    <div class="preview-page"><img id="preview-front" alt="앞면"></div>
+    <div class="preview-page"><img id="preview-back" alt="뒷면"></div>
   </div>
   <button class="btn-download" id="btn-download">PDF 다운로드</button>
 </div>
@@ -146,14 +137,13 @@
 <script>
 // --- Color palette (CMYK -> RGB approximation) ---
 const COLORS = [
+  { cmyk: 'C0 M95 Y47 K0',  hex: '#e61f56' },
   { cmyk: 'C0 M46 Y0 K0',   hex: '#eda0c7' },
   { cmyk: 'C22 M38 Y0 K0',  hex: '#bfa5cd' },
   { cmyk: 'C36 M32 Y0 K0',  hex: '#a9add2' },
   { cmyk: 'C32 M14 Y0 K0',  hex: '#b6ccea' },
-  { cmyk: 'C0 M95 Y47 K0',  hex: '#e61f56' },
 ];
 let selectedColor = COLORS[0].hex;
-
 
 // Build color chips
 const chipsEl = document.getElementById('color-chips');
@@ -161,7 +151,7 @@ COLORS.forEach((c, i) => {
   const chip = document.createElement('div');
   chip.className = 'color-chip' + (i === 0 ? ' selected' : '');
   chip.style.background = c.hex;
-  chip.innerHTML = `<span class="cmyk-tip">${c.cmyk}</span>`;
+  chip.title = c.cmyk;
   chip.onclick = () => {
     document.querySelectorAll('.color-chip').forEach(el => el.classList.remove('selected'));
     chip.classList.add('selected');
@@ -170,7 +160,6 @@ COLORS.forEach((c, i) => {
   };
   chipsEl.appendChild(chip);
 });
-
 
 // --- Coupon types ---
 const TYPES = {
@@ -255,8 +244,6 @@ function replaceColorInSvg(svgText, origHex, newHex) {
 
 // Crop SVG viewBox to trim size (remove 3mm bleed from preview)
 function cropToTrim(svgText) {
-  // Original viewBox: 0 0 371.34 215.43 (bleed)
-  // Trim viewBox: 8.504 8.504 354.33 198.43
   return svgText.replace(
     /viewBox="0 0 371\.34 215\.43"/,
     'viewBox="8.504 8.504 354.33 198.43"'
@@ -333,6 +320,7 @@ function showToast(msg) {
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
+
 // --- Crop marks ---
 function drawCropMarks(page) {
   const { rgb } = PDFLib;
@@ -393,11 +381,11 @@ async function generate(typeKey) {
   const issueDate = getIssueDate();
   const expiry = calcExpiry(issueDate);
   currentExpiry = expiry;
+  currentType = type;
   const fileDate = formatDateForFile(expiry);
   const fileName = `${type.prefix}_${fileDate}.pdf`;
 
   try {
-    currentType = type;
     showLoading('리소스 로딩 중...');
 
     const [fontB64, frontSvg, backTemplate] = await Promise.all([
@@ -415,10 +403,8 @@ async function generate(typeKey) {
     const backBlob = new Blob([cropToTrim(backSvg)], { type: 'image/svg+xml;charset=utf-8' });
     document.getElementById('preview-front').src = URL.createObjectURL(frontBlob);
     document.getElementById('preview-back').src = URL.createObjectURL(backBlob);
-    document.getElementById('preview-title').textContent = type.name;
-    document.getElementById('preview-info').textContent = `등록 기간: ${expiry}까지 | 파일명: ${fileName}`;
-
     const btnDl = document.getElementById('btn-download');
+    btnDl.textContent = `${fileName} 다운로드`;
     btnDl.style.display = 'block';
     btnDl.className = 'btn-download' + (type.style === 'basic' ? ' basic-style' : '');
     document.getElementById('preview-area').style.display = 'block';
