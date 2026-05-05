@@ -60,6 +60,9 @@
   .preview-pages { display: flex; gap: 16px; align-items: flex-start; }
   .preview-page { flex: 1; min-width: 0; }
   .preview-page img { width: 100%; border-radius: 4px; }
+  @media (max-width: 640px) {
+    .preview-pages { flex-direction: column; }
+  }
 
   .btn-download {
     display: none; margin: 16px auto 0;
