@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>왓챠 구독권 PDF 생성</title>
+<title>지류 구독권 인쇄용 PDF 생성</title>
 <script src="pdf-lib.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -30,12 +30,13 @@
   }
   .btn-coupon:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
   .btn-coupon:active { transform: translateY(0); }
+  .btn-coupon.active { border-color: #fff; background: rgba(255,255,255,0.08); }
   .btn-coupon .title { font-size: 1.05rem; font-weight: 600; }
   .btn-coupon .sub { font-size: 0.72rem; color: #bbb; font-weight: 400; }
   .btn-coupon.premium { border-color: rgba(255,5,88,0.5); }
-  .btn-coupon.premium:hover { border-color: #FF0558; box-shadow: 0 4px 24px rgba(255,5,88,0.2); }
+  .btn-coupon.premium:hover, .btn-coupon.premium.active { border-color: #FF0558; box-shadow: 0 4px 24px rgba(255,5,88,0.2); }
   .btn-coupon.basic { border-color: rgba(255,105,156,0.5); }
-  .btn-coupon.basic:hover { border-color: #FF699C; box-shadow: 0 4px 24px rgba(255,105,156,0.2); }
+  .btn-coupon.basic:hover, .btn-coupon.basic.active { border-color: #FF699C; box-shadow: 0 4px 24px rgba(255,105,156,0.2); }
 
   .guide-info { color: #999; font-size: 0.7rem; text-align: center; margin-bottom: 36px; }
 
@@ -53,24 +54,29 @@
 
   /* Preview */
   #preview-area {
-    display: none; width: 100%; max-width: 1100px;
+    width: 100%; max-width: 1100px;
     background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
     border-radius: 12px; padding: 24px; margin-top: 8px;
+    overflow: hidden; max-height: 0; opacity: 0;
+    transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.4s ease;
+    padding-top: 0; padding-bottom: 0;
+  }
+  #preview-area.show {
+    max-height: 800px; opacity: 1;
+    padding: 24px;
   }
   .preview-pages { display: flex; gap: 16px; align-items: flex-start; }
   .preview-page { flex: 1; min-width: 0; }
-  .preview-page img { width: 100%; border-radius: 4px; }
-  @media (max-width: 640px) {
-    .preview-pages { flex-direction: column; }
-  }
+  .preview-page img { width: 100%; border-radius: 4px; display: block; }
 
   .btn-download {
-    display: none; margin: 16px auto 0;
+    display: block; margin: 16px auto 0;
     padding: 12px 40px; border-radius: 8px; border: none;
     background: #FF0558; color: #fff; font-size: 0.88rem; font-weight: 600;
     cursor: pointer; transition: all 0.2s;
   }
-  .btn-download:hover { background: #ff3a7a; }
+  .btn-download:hover { background: #ff3a7a; transform: translateY(-1px); }
+  .btn-download:active { transform: translateY(0); }
   .btn-download.basic-style { background: #FF699C; }
   .btn-download.basic-style:hover { background: #ff8ab3; }
 
@@ -96,6 +102,12 @@
     font-size: 0.82rem; opacity: 0; transition: opacity 0.3s; pointer-events: none;
   }
   #toast.show { opacity: 1; }
+
+  @media (max-width: 660px) {
+    .btn-coupon { width: 100%; }
+    .preview-pages { flex-direction: column; align-items: center; }
+    #preview-area.show { max-height: 1200px; }
+  }
 </style>
 </head>
 <body>
@@ -388,6 +400,10 @@ async function generate(typeKey) {
   const fileDate = formatDateForFile(expiry);
   const fileName = `${type.prefix}_${fileDate}.pdf`;
 
+  // Mark active button
+  document.querySelectorAll('.btn-coupon').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
   try {
     showLoading('리소스 로딩 중...');
 
@@ -406,11 +422,11 @@ async function generate(typeKey) {
     const backBlob = new Blob([cropToTrim(backSvg)], { type: 'image/svg+xml;charset=utf-8' });
     document.getElementById('preview-front').src = URL.createObjectURL(frontBlob);
     document.getElementById('preview-back').src = URL.createObjectURL(backBlob);
+
     const btnDl = document.getElementById('btn-download');
     btnDl.textContent = `${fileName} 다운로드`;
-    btnDl.style.display = 'block';
     btnDl.className = 'btn-download' + (type.style === 'basic' ? ' basic-style' : '');
-    document.getElementById('preview-area').style.display = 'block';
+    document.getElementById('preview-area').classList.add('show');
 
     hideLoading();
 
