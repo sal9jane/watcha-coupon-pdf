@@ -18,7 +18,7 @@
   .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 32px; }
   .btn-grid { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; }
   .btn-coupon {
-    width: 220px; height: 80px;
+    width: 220px; height: 90px;
     border: 2px solid rgba(255,255,255,0.15); border-radius: 12px;
     background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
     color: #fff; font-size: 1rem; font-weight: 600;
@@ -28,6 +28,7 @@
   .btn-coupon:hover { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.12); transform: translateY(-2px); }
   .btn-coupon:active { transform: translateY(0); }
   .btn-coupon .label { font-size: 0.75rem; color: #aaa; font-weight: 400; }
+  .btn-coupon .expiry-label { font-size: 0.65rem; color: #666; font-weight: 400; }
   .btn-coupon.premium { border-color: #FF0558; }
   .btn-coupon.premium:hover { border-color: #ff3a7a; box-shadow: 0 4px 20px rgba(255,5,88,0.3); }
   .btn-coupon.basic { border-color: #FF699C; }
@@ -50,9 +51,9 @@
   }
   .color-chip:hover .cmyk-tip { display: block; }
 
-  .guide-text {
-    color: #777; font-size: 0.78rem; text-align: center;
-    max-width: 460px; line-height: 1.6; margin-bottom: 12px;
+  .guide-info {
+    color: #555; font-size: 0.7rem; text-align: center;
+    margin: -12px 0 24px;
   }
 
   #preview-area {
@@ -109,23 +110,25 @@
   <button class="btn-coupon premium" onclick="generate('premium_regular')">
     프리미엄 1개월
     <span class="label">정기권</span>
+    <span class="expiry-label" id="expiry-premium-regular"></span>
   </button>
   <button class="btn-coupon premium" onclick="generate('premium_short')">
     프리미엄 1개월
     <span class="label">단기권</span>
+    <span class="expiry-label" id="expiry-premium-short"></span>
   </button>
   <button class="btn-coupon basic" onclick="generate('basic_short')">
     베이직 1개월
     <span class="label">단기권</span>
+    <span class="expiry-label" id="expiry-basic-short"></span>
   </button>
 </div>
+<p class="guide-info">등록 기간은 생성일 기준으로 6월 30일 또는 12월 31일로 자동 설정됩니다.</p>
 
 <div class="color-section">
   <div class="section-label">뒷면 컬러를 선택할 수 있어요.</div>
   <div class="color-chips" id="color-chips"></div>
 </div>
-
-<p class="guide-text">등록 기간은 생성일 기준으로 6월 30일 또는 12월 31일로 자동 설정됩니다.</p>
 
 <div id="preview-area">
   <h2 id="preview-title"></h2>
@@ -495,7 +498,11 @@ async function downloadPdf() {
   }
 }
 
-// Init
+// Init — show expiry date on buttons
+const initExpiry = calcExpiry(new Date());
+document.getElementById('expiry-premium-regular').textContent = `~ ${initExpiry}`;
+document.getElementById('expiry-premium-short').textContent = `~ ${initExpiry}`;
+document.getElementById('expiry-basic-short').textContent = `~ ${initExpiry}`;
 </script>
 </body>
 </html>
